@@ -1,0 +1,143 @@
+/* styles/Chat.css */
+.chat-container {
+  display: flex;
+  height: 100vh;
+  background-color: var(--background-color);
+  overflow: hidden;
+}
+
+.sidebar-wrapper {
+  width: 360px;
+  border-right: 1px solid var(--border-color);
+  background-color: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-wrapper {
+  flex: 1;
+  display: flex;
+  background-color: var(--background-color);
+}
+
+.no-chat-selected {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--background-color);
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.empty-state h2 {
+  font-size: 24px;
+  margin-bottom: 10px;
+  color: var(--text-primary);
+}
+
+.empty-state p {
+  font-size: 14px;
+}
+
+.request-panel {
+  width: 100%;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--background-color);
+}
+
+.request-card {
+  width: 100%;
+  max-width: 520px;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.request-card h2 {
+  margin-bottom: 12px;
+  font-size: 22px;
+  color: var(--text-primary);
+}
+
+.status-message {
+  margin-bottom: 20px;
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.info-text {
+  margin: 16px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.request-card .btn {
+  min-width: 200px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .chat-container {
+    flex-direction: column;
+  }
+
+  .sidebar-wrapper {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    max-height: 50%;
+    transition: all 0.3s ease;
+  }
+
+  .sidebar-wrapper.hidden-mobile {
+    display: none;
+  }
+
+  .chat-wrapper {
+    max-height: 50%;
+    transition: all 0.3s ease;
+  }
+
+  .chat-wrapper.visible-mobile {
+    max-height: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar-wrapper {
+    max-height: 100%;
+  }
+
+  .chat-wrapper {
+    max-height: 100%;
+  }
+
+  .chat-wrapper.visible-mobile {
+    max-height: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar-wrapper {
+    max-height: 100%;
+  }
+
+  .chat-wrapper {
+    max-height: 100%;
+  }
+
+  .chat-wrapper.visible-mobile {
+    max-height: 100%;
+  }
+}
