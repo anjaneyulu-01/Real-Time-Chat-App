@@ -13,23 +13,25 @@ dotenv.config();
 // Initialize app
 const app = express();
 const httpServer = createServer(app);
+
+// CORS configuration - allow localhost on any port for development
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.CLIENT_URL 
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
 const io = new SocketIOServer(httpServer, {
-  cors: {
-    origin: 'http://localhost:3000', // React app URL
-    methods: ['GET', 'POST'],
-    credentials: true,
-  },
+  cors: corsOptions,
 });
 
 // Middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(
-  cors({
-    origin: 'http://localhost:3000',
-    credentials: true,
-  })
-);
+app.use(cors(corsOptions));
 
 // Connect to database
 connectDB();

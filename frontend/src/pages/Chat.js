@@ -32,7 +32,7 @@ const Chat = () => {
         ? await userService.searchUsers(query.trim())
         : await userService.getAllUsers();
 
-      if (response.data.success) {
+      if (response.data.success && Array.isArray(response.data.users)) {
         const usersWithLastMessage = await Promise.allSettled(
           response.data.users.map(async (user) => {
             try {
@@ -66,10 +66,14 @@ const Chat = () => {
             : preparedUsers[0] || null
         );
         return preparedUsers;
+      } else {
+        console.error('Invalid response structure:', response.data);
+        setUsers([]);
+        return [];
       }
-      return [];
     } catch (error) {
       console.error('Error fetching users:', error);
+      setUsers([]);
       return [];
     } finally {
       setLoading(false);
@@ -88,14 +92,9 @@ const Chat = () => {
     return () => clearTimeout(timeout);
   }, [searchQuery]);
 
-  // Filter users based on search query
-  const filteredUsers = users.filter((u) => {
-    const normalizedQuery = searchQuery.toLowerCase();
-    return (
-      u.name.toLowerCase().includes(normalizedQuery) ||
-      u.email.toLowerCase().includes(normalizedQuery)
-    );
-  });
+  // Use filtered users directly from server search
+  // No client-side filtering needed as server search already filters results
+  const filteredUsers = Array.isArray(users) ? users : [];
 
   const handleLogout = async () => {
     await logout();

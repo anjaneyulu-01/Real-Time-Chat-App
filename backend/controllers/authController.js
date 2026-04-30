@@ -11,12 +11,12 @@ const generateToken = (id) => {
 
 const buildUserPayload = (user, currentUser = null) => {
   const currentId = currentUser?.toString();
-  const contacts = user.contacts.map((id) => id.toString());
+  const contacts = (user.contacts || []).map((id) => id.toString());
   const blockedByMe = currentUser
-    ? currentUser.blockedUsers.map((id) => id.toString()).includes(user._id.toString())
+    ? (currentUser.blockedUsers || []).map((id) => id.toString()).includes(user._id.toString())
     : false;
   const blockedMe = currentUser
-    ? user.blockedUsers.map((id) => id.toString()).includes(currentId)
+    ? (user.blockedUsers || []).map((id) => id.toString()).includes(currentId)
     : false;
 
   return {
@@ -172,6 +172,14 @@ export const getAllUsers = async (req, res) => {
     const currentUser = await User.findById(req.user.id).select(
       'contacts blockedUsers'
     );
+    
+    if (!currentUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'Current user not found',
+      });
+    }
+    
     const users = await User.find({ _id: { $ne: req.user.id } });
 
     res.status(200).json({
@@ -201,12 +209,22 @@ export const searchUsers = async (req, res) => {
     const currentUser = await User.findById(req.user.id).select(
       'contacts blockedUsers'
     );
+    
+    if (!currentUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'Current user not found',
+      });
+    }
+
+    // Escape special regex characters to prevent regex injection
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
     const users = await User.find({
       _id: { $ne: req.user.id },
       $or: [
-        { email: { $regex: query, $options: 'i' } },
-        { name: { $regex: query, $options: 'i' } },
+        { email: { $regex: escapedQuery, $options: 'i' } },
+        { name: { $regex: escapedQuery, $options: 'i' } },
       ],
     });
 

@@ -84,10 +84,13 @@ const Sidebar = ({
         <FiSearch className="search-icon" />
         <input
           type="text"
-          placeholder="Search contacts..."
+          placeholder="Search by username or email..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           className="search-input"
+          maxLength={100}
+          spellCheck="false"
+          autoComplete="off"
         />
       </div>
 

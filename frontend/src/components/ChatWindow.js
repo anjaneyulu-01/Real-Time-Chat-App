@@ -20,6 +20,7 @@ const ChatWindow = ({ selectedUser, currentUser, onBack, onUserUpdate }) => {
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const isMountedRef = useRef(true);
 
   const {
     socket,
@@ -31,12 +32,24 @@ const ChatWindow = ({ selectedUser, currentUser, onBack, onUserUpdate }) => {
     onlineUsers,
   } = useSocket();
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   // Fetch messages on component mount or when selected user changes
   useEffect(() => {
+    let isCurrent = true;
+
     const fetchMessages = async () => {
       try {
         setLoading(true);
         const response = await messageService.getMessages(selectedUser.id);
+        
+        if (!isCurrent || !isMountedRef.current) return;
+        
         if (response.data.success) {
           setMessages(response.data.messages);
 
@@ -51,21 +64,37 @@ const ChatWindow = ({ selectedUser, currentUser, onBack, onUserUpdate }) => {
               markMessageAsSeen(msg._id, getIdString(msg.senderId));
             }
           });
+          
+          // Refresh user list to update unread badge after marking as seen
+          if (onUserUpdate) {
+            setTimeout(() => {
+              if (isCurrent && isMountedRef.current) {
+                onUserUpdate();
+              }
+            }, 100);
+          }
         }
       } catch (error) {
         console.error('Error fetching messages:', error);
       } finally {
-        setLoading(false);
+        if (isCurrent && isMountedRef.current) {
+          setLoading(false);
+        }
       }
     };
 
     fetchMessages();
-  }, [selectedUser.id, currentUser.id, markMessageAsSeen]);
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [selectedUser.id, currentUser.id]);
 
   // Listen for incoming messages via Socket.io
   useEffect(() => {
     if (!socket) return;
 
+    // Listen for messages I receive from others
     socket.on('receive_message', (message) => {
       const senderId = getIdString(message.senderId);
       const receiverId = getIdString(message.receiverId);
@@ -85,19 +114,31 @@ const ChatWindow = ({ selectedUser, currentUser, onBack, onUserUpdate }) => {
       }
     });
 
+    // Listen for messages I sent (confirmation from server)
+    socket.on('message_sent', (data) => {
+      if (data.success && data.message) {
+        setMessages((prev) => [...prev, data.message]);
+      }
+    });
+
     socket.on('message_seen_notification', (data) => {
       setMessages((prev) =>
         prev.map((msg) =>
           msg._id === data.messageId ? { ...msg, status: 'seen' } : msg
         )
       );
+      // Refresh user list to update unread badge
+      if (onUserUpdate) {
+        onUserUpdate();
+      }
     });
 
     return () => {
       socket.off('receive_message');
+      socket.off('message_sent');
       socket.off('message_seen_notification');
     };
-  }, [socket, selectedUser.id, currentUser.id, markMessageAsSeen]);
+  }, [socket, selectedUser.id, currentUser.id]);
 
   // Auto-scroll to latest message
   useEffect(() => {
